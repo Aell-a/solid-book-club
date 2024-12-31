@@ -20,8 +20,6 @@ const Header = () => {
     null
   );
   const router = useRouter();
-
-  // Extract the base URL of the pod from webId
   const userPodUrl = session.info.webId?.split("/profile")[0];
 
   useEffect(() => {
@@ -58,14 +56,10 @@ const Header = () => {
       return null;
     }
   };
-
-  // Function to check if the collection folder exists
   const checkCollectionExists = async () => {
     if (userPodUrl) {
       const booksFolderUrl = `${userPodUrl}/solidbookclub/books/`;
-
       try {
-        // Try to fetch the folder to check if it exists
         await getSolidDataset(booksFolderUrl, { fetch: session.fetch });
         setCollectionExists(true);
       } catch (error) {
@@ -73,8 +67,6 @@ const Header = () => {
       }
     }
   };
-
-  // Function to create the collection folder
   const createCollection = async () => {
     if (userPodUrl) {
       const booksFolderUrl = `${userPodUrl}/solidbookclub/books/`;
@@ -83,17 +75,13 @@ const Header = () => {
       await saveSolidDatasetAt(booksFolderUrl, newDataset, {
         fetch: session.fetch,
       });
-      setCollectionExists(true); // After creating, set the state to true
+      setCollectionExists(true);
     }
   };
-
-  // Function to handle button click - either create collection or navigate to my collection
   const handleButtonClick = () => {
     if (collectionExists) {
-      // Navigate to the My Collection page
       router.push("/my-collection");
     } else {
-      // Create collection
       createCollection();
     }
   };

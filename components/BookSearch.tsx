@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Book } from "@/types/book";
+import { Book } from "@/interfaces/Book";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {

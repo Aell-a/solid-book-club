@@ -27,14 +27,15 @@ const MyCollection = () => {
 
     try {
       const userBooks = await fetchBooks(podBaseUrl, session);
-
-      // Flatten the books from @graph and deduplicate by @id
-      const flattenedBooks = userBooks
-        .flatMap((collection) => collection["@graph"])
-        .reduce((uniqueBooks, book) => {
-          const exists = uniqueBooks.some((b) => b["@id"] === book["@id"]);
+      const flattenedBooks = userBooks["@graph"].reduce(
+        (uniqueBooks: Book[], book: Book) => {
+          const exists = uniqueBooks.some(
+            (b: Book) => b["@id"] === book["@id"]
+          );
           return exists ? uniqueBooks : [...uniqueBooks, book];
-        }, []);
+        },
+        []
+      );
 
       setBooks(flattenedBooks);
       console.log(flattenedBooks);
@@ -57,7 +58,7 @@ const MyCollection = () => {
       try {
         const podBaseUrl = session.info.webId.split("profile/card#me")[0];
         await removeBook(podBaseUrl, bookId, session);
-        await loadBooks(); // Reload books after removing a book
+        await loadBooks();
       } catch (error) {
         console.error("Error removing book:", error);
       }
@@ -100,7 +101,7 @@ const MyCollection = () => {
               <div key={index} className="border p-4 rounded-lg">
                 <h3 className="font-semibold">{book["schema:name"]}</h3>
                 <p>Author: {book["schema:author"]["schema:name"]}</p>
-                <Button onClick={() => setSelectedBook(book)}>
+                <Button className="mr-1" onClick={() => setSelectedBook(book)}>
                   View Details
                 </Button>
                 <Button

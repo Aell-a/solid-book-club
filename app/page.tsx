@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import BookSearch from "@/components/BookSearch";
 import { fetchAllBooks } from "@/api/booksApi";
 import { useAuth } from "@/context/AuthContext";
-import { Book } from "@/types/book";
+import { Book } from "@/interfaces/Book";
 
 export default function Home() {
   const { isLoggedIn, session } = useAuth();
@@ -14,15 +14,12 @@ export default function Home() {
     const loadBooks = async () => {
       if (isLoggedIn) {
         const rawBooks = await fetchAllBooks(session);
-
-        // Flatten and process the data
+        console.log(rawBooks);
         const allBooks = rawBooks.flatMap((item) =>
           item.books.flatMap((book) =>
-            book["@graph"].map((b) => ({ ...b, owner: item.owner }))
+            book["@graph"].map((b: Book) => ({ ...b, owner: item.owner }))
           )
         );
-
-        // Group books by owner
         const groupedBooks = allBooks.reduce((acc, book) => {
           if (!acc[book.owner]) {
             acc[book.owner] = [];

@@ -39,8 +39,8 @@ const fetchUserProfile = async (
 
 export async function fetchAllBooks(
   session: Session
-): Promise<{ owner: string; books: Book[] }[]> {
-  const collections: { owner: string; books: Book[] }[] = [];
+): Promise<{ owner: string; books: Book[]; ownerType: string }[]> {
+  const collections: { owner: string; books: Book[]; ownerType: string }[] = [];
 
   for (const pod of pods) {
     const podUrl = `https://solidweb.me/${pod}/`;
@@ -49,6 +49,7 @@ export async function fetchAllBooks(
 
     try {
       const ownerName = await fetchUserProfile(webId, session);
+      const ownerType = "User";
 
       const file = await getFile(bookFileUrl, { fetch: session.fetch });
       const text = await file.text();
@@ -57,6 +58,7 @@ export async function fetchAllBooks(
       collections.push({
         owner: ownerName || "Unknown Owner",
         books: bookCollection["@graph"],
+        ownerType,
       });
     } catch (error) {
       console.error(`Error fetching books from ${podUrl}:`, error);
@@ -69,17 +71,17 @@ export async function fetchAllBooks(
 export async function fetchBooks(
   podUrl: string,
   session: Session
-): Promise<Book[]> {
+): Promise<BookCollection> {
   try {
     const bookFileUrl = `${podUrl}solidbookclub/${BOOKS_FILE}`;
     const file = await getFile(bookFileUrl, { fetch: session.fetch });
     const text = await file.text();
     const bookCollection: BookCollection = JSON.parse(text);
-    return bookCollection["@graph"];
+    return bookCollection;
   } catch (error) {
     console.error("Error fetching books:", error);
     if (error instanceof Error && error.name === "NotFoundError") {
-      return [];
+      return { "@context": "http://schema.org/", "@graph": [] };
     }
     throw new Error("Failed to fetch books.");
   }
@@ -99,17 +101,12 @@ export async function addBook(
       const text = await file.text();
       bookCollection = JSON.parse(text);
     } catch (error) {
-      // If the file doesn't exist, create a new collection
       bookCollection = {
         "@context": "http://schema.org/",
         "@graph": [],
       };
     }
-
-    // Add the new book to the collection
     bookCollection["@graph"].push(newBook);
-
-    // Save the updated collection
     await overwriteFile(
       bookFileUrl,
       new Blob([JSON.stringify(bookCollection, null, 2)], {
@@ -133,13 +130,9 @@ export async function removeBook(
     const file = await getFile(bookFileUrl, { fetch: session.fetch });
     const text = await file.text();
     const bookCollection: BookCollection = JSON.parse(text);
-
-    // Remove the book with the matching ID
     bookCollection["@graph"] = bookCollection["@graph"].filter(
       (book) => book["@id"] !== bookId
     );
-
-    // Save the updated collection
     await overwriteFile(
       bookFileUrl,
       new Blob([JSON.stringify(bookCollection, null, 2)], {
